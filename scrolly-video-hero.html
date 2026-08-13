@@ -1,0 +1,509 @@
+<style>
+/* ==========================================================================
+   SCROLLY VIDEO HERO — estilos encapsulados bajo .scrolly-video-hero
+   No modifica body/html ni estilos globales del sitio.
+   ========================================================================== */
+.scrolly-video-hero {
+  /* ---- Variables de personalización rápida ---- */
+  --svh-overlay-color: rgba(0, 0, 0, 0.20);   /* Intensidad del overlay oscuro sobre el video */
+  --svh-vignette-color: rgba(0, 0, 0, 0.55);  /* Intensidad de la viñeta en los bordes */
+  --svh-text-color: #ffffff;                  /* Color de título / subtítulo */
+  --svh-accent-color: #ffffff;                /* Color de acentos: línea, barra de progreso, borde CTA */
+  --svh-progress-track: rgba(255, 255, 255, 0.18);
+  --svh-progress-fill: #ffffff;
+  --svh-title-size: clamp(2rem, 5vw, 4.25rem);
+  --svh-subtitle-size: clamp(1rem, 1.3vw, 1.15rem);
+  --svh-fallback-bg: #0a0a0a;
+
+  position: relative;
+  width: 100%;
+  background: #000;
+  box-sizing: border-box;
+}
+.scrolly-video-hero *,
+.scrolly-video-hero *::before,
+.scrolly-video-hero *::after {
+  box-sizing: inherit;
+}
+
+/* Contenedor que GSAP fija (pin) durante el scroll.
+   Se usa width:100% (no 100vw) a propósito: 100vw provoca overflow-x
+   horizontal cuando hay scrollbar vertical, un problema común dentro
+   de secciones de Divi. El efecto visual de "pantalla completa" es
+   idéntico siempre que el módulo esté en una sección/fila full width. */
+.scrolly-video-hero__pin {
+  position: relative;
+  width: 100%;
+  height: 100vh;
+  min-height: 100vh;
+  overflow: hidden;
+  background: #000;
+}
+
+/* ---- Video ---- */
+.scrolly-video-hero__video-wrap {
+  position: absolute;
+  inset: 0;
+  width: 100%;
+  height: 100%;
+}
+.scrolly-video-hero__video {
+  position: absolute;
+  inset: 0;
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+  object-position: center center;
+  display: block;
+  background: #000;
+}
+/* Fondo de respaldo elegante (se activa solo si el video falla o hay reduced-motion) */
+.scrolly-video-hero__fallback-bg {
+  display: none;
+  position: absolute;
+  inset: 0;
+  background:
+    radial-gradient(120% 120% at 50% 20%, rgba(255, 255, 255, 0.06), transparent 60%),
+    var(--svh-fallback-bg);
+}
+
+/* ---- Overlay + viñeta ---- */
+.scrolly-video-hero__overlay {
+  position: absolute;
+  inset: 0;
+  background: var(--svh-overlay-color);
+  pointer-events: none;
+}
+.scrolly-video-hero__vignette {
+  position: absolute;
+  inset: 0;
+  pointer-events: none;
+  box-shadow: inset 0 0 18vw var(--svh-vignette-color);
+}
+
+/* ---- Contenido (título / subtítulo / CTA) ---- */
+.scrolly-video-hero__content {
+  position: absolute;
+  left: 50%;
+  top: 50%;
+  transform: translate(-50%, -50%);
+  width: 100%;
+  max-width: 46rem;
+  padding: 0 1.5rem;
+  text-align: center;
+  color: var(--svh-text-color);
+  visibility: hidden; /* GSAP autoAlpha controla visibility+opacity */
+  opacity: 0;
+  z-index: 3;
+}
+.scrolly-video-hero__title {
+  margin: 0 0 1rem;
+  font-size: var(--svh-title-size);
+  font-weight: 300;
+  line-height: 1.15;
+  letter-spacing: -0.01em;
+}
+.scrolly-video-hero__subtitle {
+  margin: 0 0 2rem;
+  font-size: var(--svh-subtitle-size);
+  font-weight: 300;
+  line-height: 1.6;
+  color: var(--svh-text-color);
+  opacity: 0.85;
+}
+.scrolly-video-hero__cta {
+  display: inline-block;
+  padding: 0.85em 2.2em;
+  border: 1px solid var(--svh-accent-color);
+  color: var(--svh-text-color);
+  text-decoration: none;
+  font-size: 0.8rem;
+  letter-spacing: 0.12em;
+  text-transform: uppercase;
+  border-radius: 999px;
+  transition: background-color 0.35s ease, color 0.35s ease;
+  background: transparent;
+}
+.scrolly-video-hero__cta:hover,
+.scrolly-video-hero__cta:focus-visible {
+  background-color: var(--svh-accent-color);
+  color: #000;
+}
+.scrolly-video-hero__cta:focus-visible {
+  outline: 2px solid var(--svh-accent-color);
+  outline-offset: 3px;
+}
+
+/* ---- Indicador de scroll ---- */
+.scrolly-video-hero__scroll-indicator {
+  position: absolute;
+  left: 50%;
+  bottom: 2.5rem;
+  transform: translateX(-50%);
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 0.75rem;
+  color: var(--svh-text-color);
+  z-index: 3;
+  transition: opacity 0.5s ease;
+  opacity: 0.85;
+  pointer-events: none;
+}
+.scrolly-video-hero__scroll-indicator span {
+  font-size: 0.65rem;
+  letter-spacing: 0.2em;
+  text-transform: uppercase;
+  font-weight: 400;
+}
+.scrolly-video-hero__scroll-line {
+  position: relative;
+  width: 1px;
+  height: 2.5rem;
+  overflow: hidden;
+  background: rgba(255, 255, 255, 0.25);
+}
+.scrolly-video-hero__scroll-line i {
+  position: absolute;
+  left: 0;
+  top: -100%;
+  width: 100%;
+  height: 100%;
+  background: var(--svh-accent-color);
+  animation: svh-scroll-line-move 1.8s ease-in-out infinite;
+}
+@keyframes svh-scroll-line-move {
+  0% { top: -100%; }
+  60% { top: 100%; }
+  100% { top: 100%; }
+}
+.scrolly-video-hero__scroll-indicator--hidden {
+  opacity: 0;
+}
+
+/* ---- Barra de progreso ---- */
+.scrolly-video-hero__progress {
+  position: absolute;
+  left: 0;
+  right: 0;
+  bottom: 0;
+  height: 2px;
+  background: var(--svh-progress-track);
+  z-index: 3;
+}
+.scrolly-video-hero__progress-bar {
+  width: 100%;
+  height: 100%;
+  background: var(--svh-progress-fill);
+  transform: scaleX(0);
+  transform-origin: left center;
+  will-change: transform;
+}
+
+/* ---- Estado estático de respaldo (fallback / reduced motion) ---- */
+.scrolly-video-hero--static .scrolly-video-hero__content {
+  visibility: visible !important;
+  opacity: 1 !important;
+  transform: translate(-50%, -50%) !important;
+}
+
+/* ---- Reduced motion: nunca animación compleja ---- */
+@media (prefers-reduced-motion: reduce) {
+  .scrolly-video-hero__scroll-line i {
+    animation: none;
+    top: 0;
+  }
+}
+
+/* ---- Responsive ---- */
+@media (max-width: 1024px) {
+  .scrolly-video-hero__content {
+    max-width: 38rem;
+  }
+}
+@media (max-width: 767px) {
+  .scrolly-video-hero__content {
+    padding: 0 1.25rem;
+  }
+  .scrolly-video-hero__subtitle {
+    margin-bottom: 1.5rem;
+  }
+  .scrolly-video-hero__scroll-indicator {
+    bottom: 1.5rem;
+  }
+}
+@media (max-height: 480px) and (orientation: landscape) {
+  .scrolly-video-hero__scroll-indicator {
+    display: none;
+  }
+}
+</style>
+
+<div class="scrolly-video-hero" role="region" aria-label="Video interactivo controlado por scroll">
+  <div class="scrolly-video-hero__pin">
+
+    <div class="scrolly-video-hero__video-wrap">
+      <video
+        class="scrolly-video-hero__video"
+        muted
+        playsinline
+        webkit-playsinline="true"
+        preload="auto"
+        aria-hidden="true"
+        tabindex="-1"
+      >
+        <!-- La URL del video se inyecta desde CONFIG.videoUrl (ver el bloque de JavaScript al final del código) -->
+      </video>
+      <div class="scrolly-video-hero__fallback-bg"></div>
+    </div>
+
+    <div class="scrolly-video-hero__overlay"></div>
+    <div class="scrolly-video-hero__vignette"></div>
+
+    <div class="scrolly-video-hero__content hero-content-enabled">
+      <h1 class="scrolly-video-hero__title">Tu próximo espacio comienza aquí</h1>
+      <p class="scrolly-video-hero__subtitle">Encuentra, vende o transforma una propiedad con una estrategia diseñada para ti.</p>
+      <a href="#contenido" class="scrolly-video-hero__cta" aria-label="Conoce más sobre nuestros servicios">Conoce más</a>
+    </div>
+
+    <div class="scrolly-video-hero__scroll-indicator" aria-hidden="true">
+      <span>Scroll to explore</span>
+      <div class="scrolly-video-hero__scroll-line"><i></i></div>
+    </div>
+
+    <div class="scrolly-video-hero__progress" aria-hidden="true">
+      <div class="scrolly-video-hero__progress-bar"></div>
+    </div>
+
+  </div>
+</div>
+
+<script>
+(function () {
+  "use strict";
+
+  /* ========================================================================
+     CONFIGURACIÓN — editar únicamente aquí
+     ======================================================================== */
+  var CONFIG = {
+    videoUrl: "https://mi-sitio.com/video.mp4", /* VIDEO_URL: sustituye por la URL real del video */
+    scrollDistance: "250vh",  /* SCROLL_DISTANCE: espacio de scroll para completar la animación */
+    showContent: true,        /* Mostrar/ocultar título, subtítulo y CTA */
+    showScrollIndicator: true,
+    showProgress: true,
+    scrub: 1,                 /* suavizado del scrub (segundos de "retraso" elástico) */
+    mobileEnabled: true       /* false = en móvil se muestra versión estática sin scrubbing */
+  };
+
+  /* Namespace propio para evitar colisiones con Divi / otros scripts */
+  var SCROLL_VIDEO_HERO = window.SCROLL_VIDEO_HERO || (window.SCROLL_VIDEO_HERO = { instances: [] });
+
+  var GSAP_SRC = "https://cdnjs.cloudflare.com/ajax/libs/gsap/3.12.5/gsap.min.js";
+  var SCROLLTRIGGER_SRC = "https://cdnjs.cloudflare.com/ajax/libs/gsap/3.12.5/ScrollTrigger.min.js";
+
+  function svhLoadScript(src) {
+    return new Promise(function (resolve, reject) {
+      var existing = document.querySelector('script[data-svh-src="' + src + '"]');
+      if (existing) {
+        if (existing.getAttribute("data-svh-loaded") === "true") { resolve(); return; }
+        existing.addEventListener("load", function () { resolve(); });
+        existing.addEventListener("error", function () { reject(new Error("svh: fallo al cargar " + src)); });
+        return;
+      }
+      var script = document.createElement("script");
+      script.src = src;
+      script.async = true;
+      script.setAttribute("data-svh-src", src);
+      script.onload = function () {
+        script.setAttribute("data-svh-loaded", "true");
+        resolve();
+      };
+      script.onerror = function () { reject(new Error("svh: fallo al cargar " + src)); };
+      document.head.appendChild(script);
+    });
+  }
+
+  function svhEnsureGSAP() {
+    var chain = Promise.resolve();
+    if (!window.gsap) {
+      chain = chain.then(function () { return svhLoadScript(GSAP_SRC); });
+    }
+    return chain.then(function () {
+      if (!window.ScrollTrigger) {
+        return svhLoadScript(SCROLLTRIGGER_SRC);
+      }
+    });
+  }
+
+  function svhToPixels(value, viewportHeight) {
+    var str = String(value).trim();
+    var num = parseFloat(str);
+    if (isNaN(num)) return 0;
+    if (str.indexOf("vh") !== -1) return (num / 100) * viewportHeight;
+    return num; /* se asume px */
+  }
+
+  function svhInitHero(root) {
+    if (!root || root.getAttribute("data-scroll-video-initialized") === "true") return;
+    root.setAttribute("data-scroll-video-initialized", "true");
+
+    var pinEl = root.querySelector(".scrolly-video-hero__pin");
+    var videoEl = root.querySelector(".scrolly-video-hero__video");
+    var contentEl = root.querySelector(".scrolly-video-hero__content");
+    var progressWrap = root.querySelector(".scrolly-video-hero__progress");
+    var progressBar = root.querySelector(".scrolly-video-hero__progress-bar");
+    var scrollIndicator = root.querySelector(".scrolly-video-hero__scroll-indicator");
+    var fallbackBg = root.querySelector(".scrolly-video-hero__fallback-bg");
+
+    if (!CONFIG.showContent && contentEl && contentEl.parentNode) {
+      contentEl.parentNode.removeChild(contentEl);
+      contentEl = null;
+    }
+    if (!CONFIG.showScrollIndicator && scrollIndicator && scrollIndicator.parentNode) {
+      scrollIndicator.parentNode.removeChild(scrollIndicator);
+      scrollIndicator = null;
+    }
+    if (!CONFIG.showProgress && progressWrap && progressWrap.parentNode) {
+      progressWrap.parentNode.removeChild(progressWrap);
+      progressWrap = null;
+    }
+
+    function goStatic() {
+      root.classList.add("scrolly-video-hero--static");
+      if (fallbackBg) fallbackBg.style.display = "block";
+      if (videoEl) { try { videoEl.pause(); } catch (e) {} }
+      if (scrollIndicator) scrollIndicator.style.display = "none";
+      if (progressWrap) progressWrap.style.display = "none";
+    }
+
+    if (!videoEl) { goStatic(); return; }
+
+    var reducedMotion = !!(window.matchMedia && window.matchMedia("(prefers-reduced-motion: reduce)").matches);
+    var isMobile = !!(window.matchMedia && window.matchMedia("(max-width: 767px)").matches);
+
+    /* Reduced motion o móvil deshabilitado explícitamente: hero estático, sin pin, sin bloquear scroll */
+    if (reducedMotion || (!CONFIG.mobileEnabled && isMobile)) {
+      goStatic();
+      return;
+    }
+
+    var failed = false;
+    videoEl.addEventListener("error", function () {
+      failed = true;
+      goStatic();
+    });
+
+    function onMetadataReady() {
+      if (failed) return;
+      if (!videoEl.duration || !isFinite(videoEl.duration) || videoEl.duration === 0) {
+        goStatic();
+        return;
+      }
+
+      svhEnsureGSAP().then(function () {
+        if (failed) return;
+        if (!window.gsap || !window.ScrollTrigger) { goStatic(); return; }
+        try {
+          window.gsap.registerPlugin(window.ScrollTrigger);
+          svhBuildTimeline(root, pinEl, videoEl, contentEl, progressBar, scrollIndicator);
+        } catch (e) {
+          goStatic();
+        }
+      }, function () {
+        goStatic();
+      });
+    }
+
+    if (videoEl.readyState >= 1 && videoEl.duration) {
+      onMetadataReady();
+    } else {
+      videoEl.addEventListener("loadedmetadata", onMetadataReady, { once: true });
+    }
+
+    /* Asigna la URL (VIDEO_URL) justo antes de cargar */
+    if (!videoEl.querySelector("source")) {
+      var sourceEl = document.createElement("source");
+      sourceEl.setAttribute("type", "video/mp4");
+      sourceEl.setAttribute("src", CONFIG.videoUrl);
+      videoEl.appendChild(sourceEl);
+    }
+    videoEl.load();
+  }
+
+  function svhBuildTimeline(root, pinEl, videoEl, contentEl, progressBar, scrollIndicator) {
+    var gsap = window.gsap;
+    var ScrollTrigger = window.ScrollTrigger;
+
+    var ctx = gsap.context(function () {
+      try { videoEl.currentTime = 0; } catch (e) {}
+
+      var tl = gsap.timeline({
+        defaults: { ease: "none" },
+        scrollTrigger: {
+          trigger: pinEl,
+          start: "top top",
+          end: function () { return "+=" + svhToPixels(CONFIG.scrollDistance, window.innerHeight); },
+          scrub: CONFIG.scrub,
+          pin: true,
+          anticipatePin: 1,
+          invalidateOnRefresh: true,
+          onUpdate: function (self) {
+            if (progressBar) {
+              progressBar.style.transform = "scaleX(" + self.progress + ")";
+            }
+            if (scrollIndicator) {
+              if (self.progress > 0.02) {
+                scrollIndicator.classList.add("scrolly-video-hero__scroll-indicator--hidden");
+              } else {
+                scrollIndicator.classList.remove("scrolly-video-hero__scroll-indicator--hidden");
+              }
+            }
+          }
+        }
+      });
+
+      tl.fromTo(videoEl, { currentTime: 0 }, { currentTime: videoEl.duration, duration: 1 }, 0);
+
+      if (contentEl) {
+        tl.fromTo(contentEl, { autoAlpha: 0, y: 24 }, { autoAlpha: 1, y: 0, duration: 0.14, ease: "power1.out" }, 0.02)
+          .to(contentEl, { autoAlpha: 0, y: -16, duration: 0.14, ease: "power1.in" }, 0.72);
+      }
+
+      SCROLL_VIDEO_HERO.instances.push({ root: root, scrollTrigger: tl.scrollTrigger });
+    }, root);
+
+    root._svhContext = ctx;
+  }
+
+  var svhResizeTimeout;
+  function svhHandleResize() {
+    clearTimeout(svhResizeTimeout);
+    svhResizeTimeout = setTimeout(function () {
+      if (window.ScrollTrigger) window.ScrollTrigger.refresh();
+    }, 200);
+  }
+
+  function svhReady(fn) {
+    if (document.readyState === "loading") {
+      document.addEventListener("DOMContentLoaded", fn);
+    } else {
+      fn();
+    }
+  }
+
+  svhReady(function () {
+    var heroes = document.querySelectorAll(".scrolly-video-hero:not([data-scroll-video-initialized='true'])");
+    if (!heroes.length) return;
+
+    for (var i = 0; i < heroes.length; i++) {
+      svhInitHero(heroes[i]);
+    }
+
+    if (!SCROLL_VIDEO_HERO.resizeBound) {
+      window.addEventListener("resize", svhHandleResize);
+      window.addEventListener("orientationchange", svhHandleResize);
+      SCROLL_VIDEO_HERO.resizeBound = true;
+    }
+  });
+})();
+</script>
