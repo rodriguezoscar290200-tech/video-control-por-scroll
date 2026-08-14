@@ -34,15 +34,23 @@
   box-sizing: inherit;
 }
 
-/* Anula el padding vertical que Divi aplica por defecto a la sección/fila
-   que envuelve este módulo, para eliminar el espacio en blanco encima o
-   debajo del Hero. Queda acotado con :has() solo a la sección/fila que
-   realmente contiene un .scrolly-video-hero, sin tocar el resto del sitio. */
+/* Anula el padding/margin vertical que Divi aplica por defecto a la
+   sección/fila/columna/módulo que envuelve este Code Module (incluyendo
+   el div .et_pb_code_inner que Divi inserta dentro del módulo de código),
+   para eliminar el espacio en blanco encima o debajo del Hero.
+   Se usa combinador descendiente (sin ">") porque Divi intercala
+   contenedores intermedios (p. ej. .et_pb_code_inner) entre el módulo
+   y este componente, y queda acotado solo a los envoltorios que
+   realmente contienen un .scrolly-video-hero. */
 @supports selector(:has(*)) {
-  .et_pb_section:has(> .et_pb_row .scrolly-video-hero),
-  .et_pb_row:has(> .et_pb_column .scrolly-video-hero),
-  .et_pb_column:has(> .et_pb_module > .scrolly-video-hero),
-  .et_pb_module:has(> .scrolly-video-hero) {
+  .et_pb_section:has(.scrolly-video-hero),
+  .et_pb_row:has(.scrolly-video-hero),
+  .et_pb_row_inner:has(.scrolly-video-hero),
+  .et_pb_column:has(.scrolly-video-hero),
+  .et_pb_column_inner:has(.scrolly-video-hero),
+  .et_pb_module:has(.scrolly-video-hero),
+  .et_pb_code:has(.scrolly-video-hero),
+  .et_pb_code_inner:has(.scrolly-video-hero) {
     padding: 0 !important;
     margin: 0 !important;
   }
@@ -361,9 +369,31 @@
     return num; /* se asume px */
   }
 
+  /* Refuerzo independiente de nombres de clases de Divi: sube por los
+     contenedores padre mientras cada uno envuelva ÚNICAMENTE a este Hero
+     (un solo hijo) y les anula el padding/margin vertical inline. Se
+     detiene en el primer ancestro que tenga más de un hijo (contenido
+     compartido con otros elementos), para no afectar el resto del layout.
+     Esto cubre secciones/filas/columnas de Divi sin depender de que sus
+     clases internas (.et_pb_*) coincidan con una versión concreta. */
+  function svhFlattenWrapperSpacing(root) {
+    var el = root.parentElement;
+    var guard = 0;
+    while (el && el !== document.body && guard < 25) {
+      guard += 1;
+      if (el.children.length !== 1) break;
+      el.style.paddingTop = "0px";
+      el.style.paddingBottom = "0px";
+      el.style.marginTop = "0px";
+      el.style.marginBottom = "0px";
+      el = el.parentElement;
+    }
+  }
+
   function svhInitHero(root) {
     if (!root || root.getAttribute("data-scroll-video-initialized") === "true") return;
     root.setAttribute("data-scroll-video-initialized", "true");
+    svhFlattenWrapperSpacing(root);
 
     var pinEl = root.querySelector(".scrolly-video-hero__pin");
     var videoEl = root.querySelector(".scrolly-video-hero__video");

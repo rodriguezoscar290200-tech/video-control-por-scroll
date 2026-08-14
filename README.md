@@ -8,12 +8,12 @@ Archivo del componente: [`scrolly-video-hero.html`](./scrolly-video-hero.html) �
 
 Divi suele envolver los Code Modules en una fila (`.et_pb_row`) con ancho máximo y padding por defecto, y en una sección (`.et_pb_section`) con padding vertical (ej. 90px arriba/abajo). Eso provoca justo lo que se ve en capturas típicas: bordes blancos a los lados del video y un hueco debajo antes de la siguiente sección.
 
-El componente ya lo resuelve por sí solo, sin que tengas que tocar nada en el builder de Divi:
+El componente lo resuelve por sí solo con dos mecanismos redundantes, sin que tengas que tocar nada en el builder de Divi:
 
-- `.scrolly-video-hero` usa el truco clásico de *full-bleed* (`width:100vw` + márgenes negativos de `-50vw`) para romper el ancho máximo de la fila, sin necesidad de marcar "Make This Row Fullwidth".
-- Una regla con `:has()` detecta la `.et_pb_section` / `.et_pb_row` / `.et_pb_column` / `.et_pb_module` que envuelve directamente al Hero y le pone `padding: 0; margin: 0;` **solo a esa** sección/fila — el resto del sitio no se ve afectado.
+1. **CSS `:has()`**: detecta `.et_pb_section` / `.et_pb_row` / `.et_pb_row_inner` / `.et_pb_column` / `.et_pb_column_inner` / `.et_pb_module` / `.et_pb_code` / `.et_pb_code_inner` que contengan (en cualquier nivel, no solo hijo directo — Divi inserta un `.et_pb_code_inner` dentro del módulo de código) un `.scrolly-video-hero`, y les pone `padding: 0; margin: 0;` **solo a esos** envoltorios.
+2. **Refuerzo en JavaScript** (`svhFlattenWrapperSpacing`): al iniciar, sube por los contenedores padre del Hero mientras cada uno tenga un único hijo (es decir, mientras sea un envoltorio dedicado solo a este Hero) y les anula el padding/margin vertical de forma inline. No depende de que las clases de Divi coincidan con una versión concreta — cubre cualquier estructura interna, incluida la de Divi 5 o temas hijos personalizados. Se detiene automáticamente en el primer ancestro que tenga más contenido además del Hero, para no afectar el resto del layout.
 
-Si tu navegador de pruebas es muy antiguo y no soporta `:has()` (poco probable en 2026), como alternativa puedes poner manualmente el padding de esa Sección/Fila en Divi a `0px` en la pestaña Avanzado.
+Si aun así ves un hueco, casi siempre es porque el Hero comparte fila/columna con otro elemento (el refuerzo JS se detiene ahí a propósito). En ese caso, mueve el Code Module a su propia Sección/Fila de una sola columna, o revisa manualmente el padding de esa Sección/Fila en Divi (pestaña Avanzado → Espaciado).
 
 Nota adicional: el truco `100vw` puede añadir un pixelaje horizontal mínimo si la página tiene scrollbar vertical (comportamiento estándar del navegador, no un bug del componente). Si lo notas, puedes añadir `body { overflow-x: hidden; }` en Divi → Opciones del Tema → CSS personalizado.
 
