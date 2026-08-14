@@ -4,6 +4,19 @@ Hero fullscreen cinematográfico controlado por scroll (scrubbing), listo para p
 
 Archivo del componente: [`scrolly-video-hero.html`](./scrolly-video-hero.html) — copia todo su contenido (bloque `<style>` + `<div>` + `<script>`) dentro de un único Code Module.
 
+## Nota: espacios en blanco alrededor del Hero en Divi
+
+Divi suele envolver los Code Modules en una fila (`.et_pb_row`) con ancho máximo y padding por defecto, y en una sección (`.et_pb_section`) con padding vertical (ej. 90px arriba/abajo). Eso provoca justo lo que se ve en capturas típicas: bordes blancos a los lados del video y un hueco debajo antes de la siguiente sección.
+
+El componente ya lo resuelve por sí solo, sin que tengas que tocar nada en el builder de Divi:
+
+- `.scrolly-video-hero` usa el truco clásico de *full-bleed* (`width:100vw` + márgenes negativos de `-50vw`) para romper el ancho máximo de la fila, sin necesidad de marcar "Make This Row Fullwidth".
+- Una regla con `:has()` detecta la `.et_pb_section` / `.et_pb_row` / `.et_pb_column` / `.et_pb_module` que envuelve directamente al Hero y le pone `padding: 0; margin: 0;` **solo a esa** sección/fila — el resto del sitio no se ve afectado.
+
+Si tu navegador de pruebas es muy antiguo y no soporta `:has()` (poco probable en 2026), como alternativa puedes poner manualmente el padding de esa Sección/Fila en Divi a `0px` en la pestaña Avanzado.
+
+Nota adicional: el truco `100vw` puede añadir un pixelaje horizontal mínimo si la página tiene scrollbar vertical (comportamiento estándar del navegador, no un bug del componente). Si lo notas, puedes añadir `body { overflow-x: hidden; }` en Divi → Opciones del Tema → CSS personalizado.
+
 ## B. Configuración
 
 Todo se controla desde el objeto `CONFIG` al inicio del `<script>`:

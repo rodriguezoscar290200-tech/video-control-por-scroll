@@ -15,9 +15,17 @@
   --svh-subtitle-size: clamp(1rem, 1.3vw, 1.15rem);
   --svh-fallback-bg: #0a0a0a;
 
+  /* Full-bleed: rompe el ancho/padding de la fila o sección de Divi que
+     contenga este Code Module (boxed row, ancho máximo, padding lateral)
+     sin depender de que el usuario marque "Make Fullwidth" en Divi. */
   position: relative;
-  width: 100%;
+  left: 50%;
+  right: 50%;
+  width: 100vw;
+  margin-left: -50vw;
+  margin-right: -50vw;
   background: #000;
+  overflow: hidden;
   box-sizing: border-box;
 }
 .scrolly-video-hero *,
@@ -26,11 +34,21 @@
   box-sizing: inherit;
 }
 
-/* Contenedor que GSAP fija (pin) durante el scroll.
-   Se usa width:100% (no 100vw) a propósito: 100vw provoca overflow-x
-   horizontal cuando hay scrollbar vertical, un problema común dentro
-   de secciones de Divi. El efecto visual de "pantalla completa" es
-   idéntico siempre que el módulo esté en una sección/fila full width. */
+/* Anula el padding vertical que Divi aplica por defecto a la sección/fila
+   que envuelve este módulo, para eliminar el espacio en blanco encima o
+   debajo del Hero. Queda acotado con :has() solo a la sección/fila que
+   realmente contiene un .scrolly-video-hero, sin tocar el resto del sitio. */
+@supports selector(:has(*)) {
+  .et_pb_section:has(> .et_pb_row .scrolly-video-hero),
+  .et_pb_row:has(> .et_pb_column .scrolly-video-hero),
+  .et_pb_column:has(> .et_pb_module > .scrolly-video-hero),
+  .et_pb_module:has(> .scrolly-video-hero) {
+    padding: 0 !important;
+    margin: 0 !important;
+  }
+}
+
+/* Contenedor que GSAP fija (pin) durante el scroll. */
 .scrolly-video-hero__pin {
   position: relative;
   width: 100%;
